@@ -1,9 +1,8 @@
-import OpenAI from 'openai'
+import { openai } from '@/lib/open-ai'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
-  const openai = new OpenAI()
   const openaiStream = await openai.chat.completions.create({
     model: 'gpt-4.1',
     messages: [

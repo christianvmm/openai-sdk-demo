@@ -1,60 +1,56 @@
-'use client'
+import { Streaming } from '@/app/streaming'
+import { Chat } from '@/components/chat'
+import { CreateAssistant } from '@/components/create-assistant'
+import { DeleteAssistant } from '@/components/delete-assistant'
+import { openai } from '@/lib/open-ai'
 
-import { useState } from 'react'
+export default async function Home() {
+  const assistants = (await openai.beta.assistants.list()).data
 
-export default function Home() {
-  const [streaming, setStreaming] = useState(false)
-  const [text, setText] = useState('')
-
-  async function onGet() {
-    const res = await fetch('http://localhost:3000/api/test')
-    const reader = res.body?.getReader()
-    const decoder = new TextDecoder()
-
-    if (!reader) return
-
-    setStreaming(true)
-
-    while (true) {
-      const { done, value } = await reader.read()
-      if (done) {
-        setStreaming(false)
-        break
-      }
-
-      setText((prev) => prev.concat(decoder.decode(value)))
+  const initialData = await openai.beta.threads.messages.list(
+    'thread_XBIFTKNggRbEAWNRKE0i4lv8',
+    {
+      order: 'asc',
+      limit: 100,
     }
-  }
+  )
 
-  //   const response = await openai.chat.completions.create({
-  //     model: 'gpt-4o-mini',
-  //     messages: [
-  //       {
-  //         role: 'user',
-  //         content: [
-  //           { type: 'text', text: "What's in this image?" },
-  //           {
-  //             type: 'image_url',
-  //             image_url: {
-  //               url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg',
-  //             },
-  //           },
-  //         ],
-  //       },
-  //     ],
-  //   })
-
-  //   console.log(response.choices[0].message.content)
+  console.log(initialData.data)
 
   return (
-    <div>
-      <div>
-        <h1>Response:</h1>
+    <div className='flex flex-col gap-10 p-10'>
+      {assistants.map((a) => {
+        return (
+          <div key={a.id}>
+            <p>ID: {a.id}</p>
 
-        <p>{text}</p>
+            <p>{a.name}</p>
+            <p>{a.instructions}</p>
 
-        <button onClick={onGet}>{streaming ? 'Cargando...' : 'Probar'}</button>
-      </div>
+            <DeleteAssistant id={a.id} />
+          </div>
+        )
+      })}
+      <CreateAssistant />
+
+      <Chat
+        assistantId={assistants.at(0)?.id || ''}
+        initialMessages={initialData.data.map((idk) => {
+          let text: string = ''
+
+          for (const item of idk.content) {
+            if (item.type === 'text') {
+              text += item.text.value
+            }
+          }
+
+          return {
+            content: text,
+            received: idk.role === 'assistant',
+          }
+        })}
+      />
+      <Streaming />
     </div>
   )
 }
