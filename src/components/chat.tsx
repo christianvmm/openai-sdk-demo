@@ -1,7 +1,7 @@
 'use client'
 
 import { processMessage } from '@/actions/process-message'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 type Message = {
   received?: boolean
@@ -33,28 +33,21 @@ export function Chat({
     setContent('')
 
     try {
-      await processMessage(assistantId, content)
+      const strings = await processMessage(assistantId, content)
 
-      // if (m) {
-      //   const texts: string[] = m
-      //     .map((a) => {
-      //       if (a.type === 'text') {
-      //         return a.text.value
-      //       }
-
-      //       return ''
-      //     })
-      //     .filter(Boolean)
-      //   console.log(m)
-
-      //   for (const text of texts) {
-      //     addMessage(text, true)
-      //   }
-      // }
+      for (const s of strings) {
+        addMessage(s, true)
+      }
     } catch {
       console.log('ok')
     }
   }
+
+  const bottomRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages.length])
 
   return (
     <div className='flex flex-col h-screen bg-gray-100 p-4'>
@@ -71,6 +64,7 @@ export function Chat({
 
           return <SentMessage key={i}>{m.content}</SentMessage>
         })}
+        <div ref={bottomRef} />
       </div>
 
       {/* Input area */}
