@@ -33,24 +33,24 @@ export function Chat({
     setContent('')
 
     try {
-      const m = await processMessage(assistantId, content)
+      await processMessage(assistantId, content)
 
-      if (m) {
-        const texts: string[] = m
-          .map((a) => {
-            if (a.type === 'text') {
-              return a.text.value
-            }
+      // if (m) {
+      //   const texts: string[] = m
+      //     .map((a) => {
+      //       if (a.type === 'text') {
+      //         return a.text.value
+      //       }
 
-            return ''
-          })
-          .filter(Boolean)
-        console.log(m)
+      //       return ''
+      //     })
+      //     .filter(Boolean)
+      //   console.log(m)
 
-        for (const text of texts) {
-          addMessage(text, true)
-        }
-      }
+      //   for (const text of texts) {
+      //     addMessage(text, true)
+      //   }
+      // }
     } catch {
       console.log('ok')
     }

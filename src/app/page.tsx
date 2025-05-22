@@ -15,8 +15,6 @@ export default async function Home() {
     }
   )
 
-  console.log(initialData.data)
-
   return (
     <div className='flex flex-col gap-10 p-10'>
       {assistants.map((a) => {
