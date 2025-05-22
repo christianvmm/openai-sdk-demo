@@ -1,9 +1,11 @@
 'use client'
-// import OpenAI from 'openai'
 
-// const openai = new OpenAI()
+import { useState } from 'react'
 
 export default function Home() {
+  const [streaming, setStreaming] = useState(false)
+  const [text, setText] = useState('')
+
   async function onGet() {
     const res = await fetch('http://localhost:3000/api/test')
     const reader = res.body?.getReader()
@@ -11,10 +13,16 @@ export default function Home() {
 
     if (!reader) return
 
+    setStreaming(true)
+
     while (true) {
       const { done, value } = await reader.read()
-      if (done) break
-      console.log(decoder.decode(value))
+      if (done) {
+        setStreaming(false)
+        break
+      }
+
+      setText((prev) => prev.concat(decoder.decode(value)))
     }
   }
 
@@ -40,11 +48,12 @@ export default function Home() {
 
   return (
     <div>
-        {/* <p>{response.choices[0].message.content}</p> */}
       <div>
         <h1>Response:</h1>
 
-        <button onClick={onGet}>testear</button>
+        <p>{text}</p>
+
+        <button onClick={onGet}>{streaming ? 'Cargando...' : 'Probar'}</button>
       </div>
     </div>
   )
