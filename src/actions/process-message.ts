@@ -41,6 +41,7 @@ export async function processMessage(
   })
 
   // Step 2: Run the assistant
+  // Poll: 'no continues hasta que lo completes'
   const run = await openai.beta.threads.runs.createAndPoll(threadId, {
     assistant_id: assistantId,
   })
@@ -53,14 +54,18 @@ export async function processMessage(
       const fn = FUNCTIONS[name]
       const output = fn ? await fn(JSON.parse(args)) : 'Funcion inválida'
 
-      await openai.beta.threads.runs.submitToolOutputs(threadId, run.id, {
-        tool_outputs: [
-          {
-            tool_call_id: call.id,
-            output,
-          },
-        ],
-      })
+      await openai.beta.threads.runs.submitToolOutputsAndPoll(
+        threadId,
+        run.id,
+        {
+          tool_outputs: [
+            {
+              tool_call_id: call.id,
+              output,
+            },
+          ],
+        }
+      )
     }
   }
 
