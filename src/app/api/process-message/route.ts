@@ -4,6 +4,13 @@ import type { MessagesPage } from 'openai/resources/beta/threads/messages.mjs'
 import { AssistantSession } from '@/utils/assistant-session'
 
 export async function POST(req: Request) {
+  /**
+   * TODO: cannot execute multiple runs on the same thread :/
+   * 
+   * OpenAI can't process paralel executions by itself
+   * 
+   * I have to put the executions on a queue or something
+   */
   const { assistantId, content } = await req.json()
   const threadId = 'thread_XBIFTKNggRbEAWNRKE0i4lv8'
 
