@@ -1,16 +1,12 @@
-import { Streaming } from '@/app/streaming'
 import { Chat } from '@/components/chat'
-import { CreateAssistant } from '@/components/create-assistant'
-import { DeleteAssistant } from '@/components/delete-assistant'
 import { openai } from '@/lib/open-ai'
 
 export const dynamic = 'force-dynamic'
 
 export default async function Home() {
   const assistants = (await openai.beta.assistants.list()).data
-  console.log(assistants.at(0)?.id)
 
-  const initialData = await openai.beta.threads.messages.list(
+  const one = await openai.beta.threads.messages.list(
     'thread_XBIFTKNggRbEAWNRKE0i4lv8',
     {
       order: 'desc',
@@ -18,27 +14,25 @@ export default async function Home() {
     }
   )
 
-  const sortedMessages = initialData.data.reverse()
+  const _one = one.data.reverse()
+
+  const two = await openai.beta.threads.messages.list(
+    'thread_fpPlVfYiz73sUwygnn8lwgCa',
+    {
+      order: 'desc',
+      limit: 100,
+    }
+  )
+
+  const _two = two.data.reverse()
 
   return (
-    <div className='flex flex-col gap-10 p-10'>
-      {assistants.map((a) => {
-        return (
-          <div key={a.id}>
-            <p>ID: {a.id}</p>
-
-            <p>{a.name}</p>
-            <p>{a.instructions}</p>
-
-            <DeleteAssistant id={a.id} />
-          </div>
-        )
-      })}
-      <CreateAssistant />
-
+    <div className='flex gap-10 w-full bg-green-200'>
       <Chat
+        name='Juan'
+        threadId='thread_XBIFTKNggRbEAWNRKE0i4lv8'
         assistantId={assistants.at(0)?.id || ''}
-        initialMessages={sortedMessages.map((message) => {
+        initialMessages={_one.map((message) => {
           let text: string = ''
 
           for (const item of message.content) {
@@ -53,7 +47,26 @@ export default async function Home() {
           }
         })}
       />
-      <Streaming />
+
+      <Chat
+        name='Daniel'
+        threadId='thread_fpPlVfYiz73sUwygnn8lwgCa'
+        assistantId={assistants.at(0)?.id || ''}
+        initialMessages={_two.map((message) => {
+          let text: string = ''
+
+          for (const item of message.content) {
+            if (item.type === 'text') {
+              text += item.text.value
+            }
+          }
+
+          return {
+            content: text,
+            received: message.role === 'assistant',
+          }
+        })}
+      />
     </div>
   )
 }

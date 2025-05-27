@@ -8,10 +8,14 @@ type Message = {
 }
 
 export function Chat({
+  name,
   assistantId,
+  threadId,
   initialMessages = [],
 }: {
+  name: string
   assistantId: string
+  threadId: string
   initialMessages: Message[]
 }) {
   const [content, setContent] = useState('')
@@ -28,6 +32,8 @@ export function Chat({
   }
 
   async function onSubmit() {
+    if(!content) return
+
     addMessage(content, false)
     setContent('')
 
@@ -36,7 +42,7 @@ export function Chat({
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ assistantId, content }),
+      body: JSON.stringify({ assistantId, content, threadId }),
     })
 
     const reader = res.body?.getReader()
@@ -59,10 +65,12 @@ export function Chat({
   }, [messages.length])
 
   return (
-    <div className='flex flex-col h-screen bg-gray-100 p-4'>
+    <div className='flex flex-col h-screen bg-gray-100 p-4 flex-1'>
       {/* Chat header */}
       <div className='bg-white p-4 rounded-t-2xl shadow-md'>
-        <h2 className='text-xl font-semibold text-gray-800'>Chat with Alice</h2>
+        <h2 className='text-xl font-semibold text-gray-800'>
+          Chat with {name} ({threadId})
+        </h2>
       </div>
 
       {/* Message area */}
@@ -91,13 +99,13 @@ export function Chat({
           value={content}
           onChange={(e) => setContent(e.target.value)}
         />
-
+        {/* 
         <button
           type='submit'
           className='ml-4 bg-blue-500 text-white px-4 py-2 rounded-full shadow hover:bg-blue-600 transition'
         >
           Send
-        </button>
+        </button> */}
       </form>
     </div>
   )

@@ -5,7 +5,6 @@ const processing = new Set<string>()
 export async function enqueue(threadId: string, task: Task) {
   if (!queues.has(threadId)) queues.set(threadId, [])
 
-  console.log('Pushing Task')
   queues.get(threadId)!.push(task)
 
   if (!processing.has(threadId)) {

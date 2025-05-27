@@ -5,8 +5,7 @@ import { AssistantSession } from '@/utils/assistant-session'
 import { enqueue } from '@/app/api/process-message/enqueue'
 
 export async function POST(req: Request) {
-  const { assistantId, content } = await req.json()
-  const threadId = 'thread_XBIFTKNggRbEAWNRKE0i4lv8'
+  const { assistantId, threadId, content } = await req.json()
   const encoder = new TextEncoder()
 
   const stream = new ReadableStream({
