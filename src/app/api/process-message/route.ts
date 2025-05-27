@@ -2,42 +2,32 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import type { MessagesPage } from 'openai/resources/beta/threads/messages.mjs'
 import { AssistantSession } from '@/utils/assistant-session'
+import { enqueue } from '@/app/api/process-message/enqueue'
 
 export async function POST(req: Request) {
-  /**
-   * TODO: cannot execute multiple runs on the same thread :/
-   * 
-   * OpenAI can't process paralel executions by itself
-   * 
-   * I have to put the executions on a queue or something
-   */
   const { assistantId, content } = await req.json()
   const threadId = 'thread_XBIFTKNggRbEAWNRKE0i4lv8'
-
   const encoder = new TextEncoder()
 
   const stream = new ReadableStream({
     async start(controller) {
-      try {
-        const session = new AssistantSession(assistantId, threadId).addActions(LOCAL_FUNCTIONS)
-        await session.addUserMessage(content)
+      await enqueue(threadId, async () => {
+        try {
+          const session = new AssistantSession(assistantId, threadId).addActions(LOCAL_FUNCTIONS)
+          await session.addUserMessage(content)
 
-        for await (const msgs of session.startRun()) {
-          printMessages(msgs)
-
-          const strings = messagesToStrings(msgs)
-
-          for (const str of strings) {
-            controller.enqueue(encoder.encode(str + '\n')) // Stream one message at a time
+          for await (const msgs of session.startRun()) {
+            const strings = messagesToStrings(msgs)
+            for (const str of strings) {
+              controller.enqueue(encoder.encode(str + '\n'))
+            }
           }
+        } catch (err) {
+          console.error(err)
+        } finally {
+          controller.close()
         }
-      } catch (err) {
-        if (err instanceof Error) {
-          console.log('Run already started...', err.message)
-        }
-      } finally {
-        controller.close()
-      }
+      })
     },
   })
 
