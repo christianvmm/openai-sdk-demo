@@ -8,6 +8,11 @@ export async function processMessage(
   assistantId: string,
   content: string
 ): Promise<string[]> {
+  /**
+   * This action executes only after the previous 'processMessage' ended
+   * NO CONCURRENCY
+   */
+
   // Step 1: Create or use an existing thread for this "user"
   const threadId = 'thread_XBIFTKNggRbEAWNRKE0i4lv8'
   const session = new AssistantSession(assistantId, threadId).addActions(
