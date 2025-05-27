@@ -1,34 +1,45 @@
-'use server'
-
+import { NextResponse } from 'next/server'
 import { z } from 'zod'
+import type { MessagesPage } from 'openai/resources/beta/threads/messages.mjs'
 import { AssistantSession } from '@/utils/assistant-session'
-import { MessagesPage } from 'openai/resources/beta/threads/messages.mjs'
 
-export async function processMessage(
-  assistantId: string,
-  content: string
-): Promise<string[]> {
-  // Step 1: Create or use an existing thread for this "user"
+export async function POST(req: Request) {
+  const { assistantId, content } = await req.json()
   const threadId = 'thread_XBIFTKNggRbEAWNRKE0i4lv8'
-  const session = new AssistantSession(assistantId, threadId).addActions(
-    LOCAL_FUNCTIONS
-  )
 
-  // Step 2: Add user message
-  await session.addUserMessage(content)
+  const encoder = new TextEncoder()
 
-  // Step 3: Run the assistant
-  const strings: string[] = []
+  const stream = new ReadableStream({
+    async start(controller) {
+      try {
+        const session = new AssistantSession(assistantId, threadId).addActions(LOCAL_FUNCTIONS)
+        await session.addUserMessage(content)
 
-  for await (const msgs of session.startRun()) {
-    // From here we can Stream (view streaming.tsx) the responses,
-    // we can store them in db, send them to WhatsApp, etc.
-    printMessages(msgs)
+        for await (const msgs of session.startRun()) {
+          printMessages(msgs)
 
-    strings.push(...messagesToStrings(msgs))
-  }
+          const strings = messagesToStrings(msgs)
 
-  return strings
+          for (const str of strings) {
+            controller.enqueue(encoder.encode(str + '\n')) // Stream one message at a time
+          }
+        }
+      } catch (err) {
+        if (err instanceof Error) {
+          console.log('Run already started...', err.message)
+        }
+      } finally {
+        controller.close()
+      }
+    },
+  })
+
+  return new NextResponse(stream, {
+    headers: {
+      'Content-Type': 'text/plain; charset=utf-8',
+      'Cache-Control': 'no-cache',
+    },
+  })
 }
 
 const LOCAL_FUNCTIONS: Record<string, (props: unknown) => Promise<string>> = {

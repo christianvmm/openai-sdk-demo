@@ -6,6 +6,7 @@ import { openai } from '@/lib/open-ai'
 
 export default async function Home() {
   const assistants = (await openai.beta.assistants.list()).data
+  console.log(assistants.at(0)?.id)
 
   const initialData = await openai.beta.threads.messages.list(
     'thread_XBIFTKNggRbEAWNRKE0i4lv8',

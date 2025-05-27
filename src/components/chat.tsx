@@ -1,6 +1,5 @@
 'use client'
 
-import { processMessage } from '@/actions/process-message'
 import { useEffect, useRef, useState } from 'react'
 
 type Message = {
@@ -32,14 +31,24 @@ export function Chat({
     addMessage(content, false)
     setContent('')
 
-    try {
-      const strings = await processMessage(assistantId, content)
+    const res = await fetch('/api/process-message', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ assistantId, content }),
+    })
 
-      for (const s of strings) {
-        addMessage(s, true)
-      }
-    } catch {
-      console.log('ok')
+    const reader = res.body?.getReader()
+    const decoder = new TextDecoder()
+    if (!reader) return
+
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+
+      const chunk = decoder.decode(value)
+      addMessage(chunk, true)
     }
   }
 

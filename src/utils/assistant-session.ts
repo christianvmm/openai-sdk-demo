@@ -29,6 +29,7 @@ export class AssistantSession {
   }
 
   async *startRun() {
+    console.log('Starting Run...')
     this.run = await openai.beta.threads.runs.createAndPoll(this.threadId, {
       assistant_id: this.assistantId,
     })
