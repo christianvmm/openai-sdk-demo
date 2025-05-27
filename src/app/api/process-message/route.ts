@@ -57,19 +57,19 @@ const LOCAL_FUNCTIONS: Record<string, (props: unknown) => Promise<string>> = {
   },
 }
 
-function printMessages(messages: MessagesPage['data'] | null) {
-  console.log('NUEVOS MENSAJES GENERADOS:')
+// function printMessages(messages: MessagesPage['data'] | null) {
+//   console.log('NUEVOS MENSAJES GENERADOS:')
 
-  for (const message of messages || []) {
-    for (const content of message.content) {
-      if (content.type === 'text') {
-        console.log(content.text.value)
-      }
-    }
-  }
+//   for (const message of messages || []) {
+//     for (const content of message.content) {
+//       if (content.type === 'text') {
+//         console.log(content.text.value)
+//       }
+//     }
+//   }
 
-  console.log('-----------')
-}
+//   console.log('-----------')
+// }
 
 function messagesToStrings(messages: MessagesPage['data'] | null): string[] {
   const strings = []

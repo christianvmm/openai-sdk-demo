@@ -4,6 +4,8 @@ import { CreateAssistant } from '@/components/create-assistant'
 import { DeleteAssistant } from '@/components/delete-assistant'
 import { openai } from '@/lib/open-ai'
 
+export const dynamic = 'force-dynamic'
+
 export default async function Home() {
   const assistants = (await openai.beta.assistants.list()).data
   console.log(assistants.at(0)?.id)
