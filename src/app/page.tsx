@@ -10,10 +10,12 @@ export default async function Home() {
   const initialData = await openai.beta.threads.messages.list(
     'thread_XBIFTKNggRbEAWNRKE0i4lv8',
     {
-      order: 'asc',
-      limit: 100,
+      order: 'desc',
+      limit: 10,
     }
   )
+
+  const sortedMessages = initialData.data.reverse()
 
   return (
     <div className='flex flex-col gap-10 p-10'>
@@ -33,10 +35,10 @@ export default async function Home() {
 
       <Chat
         assistantId={assistants.at(0)?.id || ''}
-        initialMessages={initialData.data.map((idk) => {
+        initialMessages={sortedMessages.map((message) => {
           let text: string = ''
 
-          for (const item of idk.content) {
+          for (const item of message.content) {
             if (item.type === 'text') {
               text += item.text.value
             }
@@ -44,7 +46,7 @@ export default async function Home() {
 
           return {
             content: text,
-            received: idk.role === 'assistant',
+            received: message.role === 'assistant',
           }
         })}
       />
