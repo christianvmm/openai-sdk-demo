@@ -2,6 +2,7 @@
 
 import { z } from 'zod'
 import { AssistantSession } from '@/utils/assistant-session'
+import { MessagesPage } from 'openai/resources/beta/threads/messages.mjs'
 
 export async function processMessage(
   assistantId: string,
@@ -17,23 +18,14 @@ export async function processMessage(
   await session.addUserMessage(content)
 
   // Step 3: Run the assistant
-  await session.startRun()
+  const strings: string[] = []
 
-  /**
-   * Finally, get all the generated messages for this run
-   */
-  console.log('Getting messages...')
-  const generatedMessages = await session.getGeneratedMessages()
-  console.log(generatedMessages?.length)
+  for await (const msgs of session.startRun()) {
+    // From here we can Stream (view streaming.tsx) the responses,
+    // we can store them in db, send them to WhatsApp, etc.
+    printMessages(msgs)
 
-  const strings = []
-
-  for (const message of generatedMessages || []) {
-    for (const content of message.content) {
-      if (content.type === 'text') {
-        strings.push(content.text.value)
-      }
-    }
+    strings.push(...messagesToStrings(msgs))
   }
 
   return strings
@@ -55,4 +47,32 @@ const LOCAL_FUNCTIONS: Record<string, (props: unknown) => Promise<string>> = {
       return 'No se pudo transferir'
     }
   },
+}
+
+function printMessages(messages: MessagesPage['data'] | null) {
+  console.log('NUEVOS MENSAJES GENERADOS:')
+
+  for (const message of messages || []) {
+    for (const content of message.content) {
+      if (content.type === 'text') {
+        console.log(content.text.value)
+      }
+    }
+  }
+
+  console.log('-----------')
+}
+
+function messagesToStrings(messages: MessagesPage['data'] | null): string[] {
+  const strings = []
+
+  for (const message of messages || []) {
+    for (const content of message.content) {
+      if (content.type === 'text') {
+        strings.push(content.text.value)
+      }
+    }
+  }
+
+  return strings
 }

@@ -28,13 +28,13 @@ export class AssistantSession {
     })
   }
 
-  async startRun() {
+  async *startRun() {
     this.run = await openai.beta.threads.runs.createAndPoll(this.threadId, {
       assistant_id: this.assistantId,
     })
 
     let newMessages = await this.getNewMessages()
-    printMessages(newMessages)
+    yield newMessages
 
     if (this.run.required_action && this.actions) {
       for (const call of this.run.required_action.submit_tool_outputs
@@ -58,7 +58,7 @@ export class AssistantSession {
         )
 
         newMessages = await this.getNewMessages()
-        printMessages(newMessages)
+        yield newMessages
       }
     }
 
@@ -97,18 +97,4 @@ export class AssistantSession {
 
     return result.data
   }
-}
-
-function printMessages(messages: MessagesPage['data'] | null) {
-  console.log('MESSAGES:')
-
-  for (const message of messages || []) {
-    for (const content of message.content) {
-      if (content.type === 'text') {
-        console.log(content.text.value)
-      }
-    }
-  }
-
-  console.log('-----------')
 }
